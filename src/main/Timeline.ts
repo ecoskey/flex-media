@@ -1,3 +1,3 @@
-export default class Timeline {
+export default class Timeline<TTimelineEvent> {
     
 }
