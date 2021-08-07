@@ -29,48 +29,56 @@ export default class AVLNode<K, V> {
         return greaterThanLeft && lessThanRight && (this.#leftNode?.verify() ?? true) && (this.#rightNode?.verify() ?? true) && Math.abs((this.#rightNode?.height ?? 0) - (this.#leftNode?.height ?? 0)) <= 1;
     }
 
-    get key(): K {
+    public get key(): K {
         return this.#key;
     }
 
-    get height(): number {
+    public get height(): number {
         return Math.max(this.leftNode?.height ?? 0, this.#rightNode?.height ?? 0) + 1;
     }
     
-    get values(): V[] {
+    public get values(): V[] {
         return this.#values;
     }
 
-    get balanceFactor(): number {
+    public get balanceFactor(): number {
         return this.#balanceFactor;
     }
 
-    set balanceFactor(newBalanceFactor: number) {
+    public set balanceFactor(newBalanceFactor: number) {
         this.#balanceFactor = newBalanceFactor;
     }
 
-    get parent(): AVLNode<K, V> | undefined {
+    public get parent(): AVLNode<K, V> | undefined {
         return this.#parent;
     }
 
-    set parent(newParent: AVLNode<K, V> | undefined) {
+    public set parent(newParent: AVLNode<K, V> | undefined) {
         this.#parent = newParent;
     }
 
-    get leftNode(): AVLNode<K, V> | undefined {
+    public get leftNode(): AVLNode<K, V> | undefined {
         return this.#leftNode;
     }
 
-    set leftNode(newLeft: AVLNode<K, V> | undefined) { //ONLY to be used in the rotation methods
+    public set leftNode(newLeft: AVLNode<K, V> | undefined) { //ONLY to be used in the rotation methods
         this.#leftNode = newLeft;
     }
 
-    get rightNode(): AVLNode<K, V> | undefined {
+    public get rightNode(): AVLNode<K, V> | undefined {
         return this.#rightNode;
     }
 
-    set rightNode(newRight: AVLNode<K, V> | undefined) { //ONLY to be used in the rotation methods
+    public set rightNode(newRight: AVLNode<K, V> | undefined) { //ONLY to be used in the rotation methods
         this.#rightNode = newRight; 
+    }
+
+    public get min(): AVLNode<K, V> {
+        return this.#leftNode?.min ?? this;
+    }
+
+    public get max(): AVLNode<K, V> {
+        return this.#rightNode?.max ?? this;
     }
 
     public get(key: K): KVP<K, V[]> | undefined {
@@ -91,27 +99,7 @@ export default class AVLNode<K, V> {
         //to be implemented
     }*/
 
-    public getMin(): KVP<K, V[]> {
-        return this.#leftNode?.getMin() ?? {
-            key: this.#key,
-            value: this.#values,
-        };
-    }
-
-    public getMinNode(): AVLNode<K, V> {
-        return this.#leftNode?.getMinNode() ?? this;
-    }
-
-    public getMax(): KVP<K, V[]> {
-        return this.#rightNode?.getMax() ?? {
-            key: this.#key,
-            value: this.#values,
-        };
-    }
-
-    public getMaxNode(): AVLNode<K, V> {
-        return this.#rightNode?.getMaxNode() ?? this;
-    }
+    
 
     public insert(key: K, ...items: V[]): [AVLNode<K, V>, number] /* new root node, after possible tree rotations, change in height of the tree */ {
         if (items.length === 0) { return [this, 0]; }
@@ -200,7 +188,7 @@ export default class AVLNode<K, V> {
         // determine what imbalance type the tree has, then fix it :)
         // --> based on what balance factor of current tree and largest child are.
         if (tree.balanceFactor >= 2) {
-            console.log(`my temporary balance factor is: ${tree.balanceFactor}`);
+            console.warn(`my temporary balance factor is: ${tree.balanceFactor}`);
             if ((tree.rightNode as AVLNode<K, V>).balanceFactor >= 0) {
                 console.log(`performing a left rotation`);
                 return AVLNode.rotateLeft(tree);
@@ -210,7 +198,7 @@ export default class AVLNode<K, V> {
             }
         }
         if (tree.balanceFactor <= -2) {
-            console.log(`my temporary balance factor is: ${tree.balanceFactor}`);
+            console.warn(`my temporary balance factor is: ${tree.balanceFactor}`);
             if ((tree.leftNode as AVLNode<K, V>).balanceFactor <= 0) {
                 console.log(`performing a right rotation`);
                 return AVLNode.rotateRight(tree);
@@ -219,7 +207,6 @@ export default class AVLNode<K, V> {
                 return AVLNode.rotateLeftRight(tree); 
             }
         }
-        tree.balanceFactor = 0; //AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA REMOVE THIS LATER
         return tree;
     }
 

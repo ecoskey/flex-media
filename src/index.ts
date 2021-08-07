@@ -29,3 +29,8 @@ const time2 = new Date().getTime();
 
 console.log(testTree.verify(), `${time2 - time1}ms.`);
 
+const time3 = new Date().getTime();
+const arraything = [...testTree];
+const time4 = new Date().getTime();
+console.log(arraything, `time taken: ${time4 - time3}ms.`);
+
