@@ -23,18 +23,15 @@ export default class AVLIterator<K, V> implements Iterator<KVP<K, V[]>> {
         }
     }
 
+    get current(): KVP<K, V[]> {
+        return this.#current.kvp;
+    }
+
     get direction(): IteratorDirection {
         return this.#direction;
     }
 
-    get current(): KVP<K, V[]> {
-        return {
-            key: this.#current.key,
-            value: this.#current.values,
-        };
-    }
-
-    next(): IteratorResult<KVP<K, V[]>, undefined> {
+    next(): IteratorResult<KVP<K, V[]>> {
         switch (this.#direction) {
             case 'ascending': {
                 if (this.#current === this.#root.max) {
@@ -48,10 +45,7 @@ export default class AVLIterator<K, V> implements Iterator<KVP<K, V[]>> {
                     const newCurrent: AVLNode<K, V> = this.#current.rightNode.min;
                     this.#current = newCurrent;
                     return {
-                        value: {
-                            key: newCurrent.key,
-                            value: newCurrent.values,
-                        },
+                        value: newCurrent.kvp,
                         done: false,
                     };
                 }
@@ -59,14 +53,11 @@ export default class AVLIterator<K, V> implements Iterator<KVP<K, V[]>> {
                 let searchNode: AVLNode<K, V> = this.#current;
                 while (searchNode.parent) {
                     const parentRightNode = searchNode.parent.rightNode;
-                    if (parentRightNode && parentRightNode !== searchNode) {
+                    if (parentRightNode && parentRightNode !== searchNode) { // if we are approaching the parent from the left, and it has a right node
                         const newCurrent: AVLNode<K, V> = parentRightNode.min;
                         this.#current = newCurrent;
                         return {
-                            value: {
-                                key: newCurrent.key,
-                                value: newCurrent.values,
-                            },
+                            value: newCurrent.kvp,
                             done: false,
                         };
                     }
@@ -78,7 +69,7 @@ export default class AVLIterator<K, V> implements Iterator<KVP<K, V[]>> {
                 if (this.#current === this.#root.min) {
                     return {
                         value: undefined,
-                        done: true,
+                        done: true 
                     };
                 }
 
@@ -86,10 +77,7 @@ export default class AVLIterator<K, V> implements Iterator<KVP<K, V[]>> {
                     const newCurrent: AVLNode<K, V> = this.#current.leftNode;
                     this.#current = newCurrent;
                     return {
-                        value: {
-                            key: newCurrent.key,
-                            value: newCurrent.values,
-                        },
+                        value: newCurrent.kvp,
                         done: false,
                     };
                 }
@@ -101,10 +89,7 @@ export default class AVLIterator<K, V> implements Iterator<KVP<K, V[]>> {
                         const newCurrent: AVLNode<K, V> = parentLeftNode.max;
                         this.#current = newCurrent;
                         return {
-                            value: {
-                                key: newCurrent.key,
-                                value: newCurrent.values,
-                            },
+                            value: newCurrent.kvp,
                             done: false,
                         };
                     }

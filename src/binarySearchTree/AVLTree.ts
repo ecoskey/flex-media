@@ -1,7 +1,7 @@
 import AVLNode from './AVLNode';
 import { CompareFunc } from '../util/CompareFunc';
 import { KVP } from '../util/KeyValuePair';
-import AVLIterator from './AVLIterator';
+import AVLIterator, { IteratorDirection } from './AVLIterator';
 
 // implemented as a variety of Self Balancing Binary Search Tree called an AVL Tree
 export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
@@ -18,11 +18,11 @@ export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
         }
     }
 
-    public verify(): boolean {
+    verify(): boolean {
         return this.#root?.verify() ?? false;
     }
 
-    public get(key: K): KVP<K, V[]> | undefined {
+    get(key: K): KVP<K, V[]> | undefined {
         return this.#root?.get(key);
     }
 
@@ -30,7 +30,7 @@ export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
         //to be implemented
     } */
 
-    public getMin(): KVP<K, V[]> | undefined {
+    getMin(): KVP<K, V[]> | undefined {
         const minNode =  this.#root?.min;
 
         if (minNode) {
@@ -42,7 +42,7 @@ export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
         return undefined;
     }
 
-    public getMax(): KVP<K, V[]> | undefined {
+    getMax(): KVP<K, V[]> | undefined {
         const maxNode =  this.#root?.max;
 
         if (maxNode) {
@@ -54,7 +54,7 @@ export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
         return undefined;
     }
 
-    public insert(key: K, ...items: V[]): void {
+    insert(key: K, ...items: V[]): void {
         if (items.length > 0) {
             this.#root = this.#root?.insert(key, ...items)[0] ?? new AVLNode<K, V>(key, this.#compareFunc, undefined, items);
         }
@@ -64,11 +64,11 @@ export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
         this.#root = this.#root?.delete(key);
     }*/
 
-    public clear(): void {
+    clear(): void {
         this.#root = undefined;
     }
 
-    [Symbol.iterator](): Iterator<KVP<K, V[]>> {
+    entries(direction?: IteratorDirection): Iterator<KVP<K, V[]>> {
         if (!this.#root) { // makes a default (empty) iterator if there is no root node
             return {
                 next() {
@@ -80,6 +80,10 @@ export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
             };
         }
 
-        return new AVLIterator(this.#root, 'descending');
+        return new AVLIterator(this.#root, direction ?? 'ascending');
+    }
+
+    [Symbol.iterator](): Iterator<KVP<K, V[]>> {
+        return this.entries();
     }
 }

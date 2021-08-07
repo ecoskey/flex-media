@@ -1,7 +1,3 @@
-/*  Function type that compares two values.
+export type CompareResult = 'GT' | 'EQ' | 'LT'; //greater than / equal to / less than
 
-*   -> returns a positive number if a is greater than b
-*   -> returns 0 if a and b are equal
-*   -> returns a negative number if a is less than b
-*/   
-export type CompareFunc<T> = (a: T, b: T) => number;
+export type CompareFunc<T> = (a: T, b: T) => CompareResult;

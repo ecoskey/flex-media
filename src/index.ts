@@ -24,7 +24,17 @@ function generateRandomKVPArray(length: number): KVP<number, number[]>[] {
 const randomArray = generateRandomKVPArray(1000);
 
 const time1 = new Date().getTime();
-const testTree: AVLTree<number, number> = new AVLTree<number, number>((a, b) => a - b, randomArray);
+const testTree: AVLTree<number, number> = new AVLTree<number, number>((a, b) => {
+    if (a === b) {
+        return 'EQ'; 
+    } else if (a > b) {
+        return 'GT'; 
+    } else if (a < b) {
+        return 'LT';
+    }
+    console.log('number equality is being dummbbbbbbb');
+    return 'GT';
+}, randomArray);
 const time2 = new Date().getTime();
 
 console.log(testTree.verify(), `${time2 - time1}ms.`);

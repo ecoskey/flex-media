@@ -1,4 +1,4 @@
-import { CompareFunc } from '../util/CompareFunc';
+import { CompareFunc, CompareResult } from '../util/CompareFunc';
 import { KVP } from '../util/KeyValuePair';
 
 export default class AVLNode<K, V> {
@@ -12,7 +12,7 @@ export default class AVLNode<K, V> {
     #leftNode?: AVLNode<K, V>; // key should always be less than this.#key
     #rightNode?: AVLNode<K, V>; // key should always be greater than this.#key  
 
-    public constructor(key: K, compareFunc: CompareFunc<K>, initialParent?: AVLNode<K, V>, initialItems?: Iterable<V> | null | undefined) {
+    constructor(key: K, compareFunc: CompareFunc<K>, initialParent?: AVLNode<K, V>, initialItems?: Iterable<V> | null | undefined) {
         this.#key = key;
         this.#values = [...(initialItems ?? [])];
         this.#compareFunc = compareFunc;
@@ -22,76 +22,85 @@ export default class AVLNode<K, V> {
         this.#parent = initialParent;
     }
 
-    public verify(): boolean {
+    verify(): boolean { // to be removed later
         const greaterThanLeft: boolean = this.#leftNode !== undefined ? this.#key > this.#leftNode.#key : true;
         const lessThanRight: boolean = this.#rightNode !== undefined ? this.#key < this.#rightNode.#key : true;
 
         return greaterThanLeft && lessThanRight && (this.#leftNode?.verify() ?? true) && (this.#rightNode?.verify() ?? true) && Math.abs((this.#rightNode?.height ?? 0) - (this.#leftNode?.height ?? 0)) <= 1;
     }
 
-    public get key(): K {
+    get key(): K {
         return this.#key;
     }
 
-    public get height(): number {
+    get height(): number { // to be removed later
         return Math.max(this.leftNode?.height ?? 0, this.#rightNode?.height ?? 0) + 1;
     }
     
-    public get values(): V[] {
+    get values(): V[] {
         return this.#values;
     }
 
-    public get balanceFactor(): number {
+    get kvp(): KVP<K, V[]> {
+        return {
+            key: this.#key,
+            value: this.#values,
+        };
+    }
+
+    get balanceFactor(): number {
         return this.#balanceFactor;
     }
 
-    public set balanceFactor(newBalanceFactor: number) {
+    set balanceFactor(newBalanceFactor: number) {
         this.#balanceFactor = newBalanceFactor;
     }
 
-    public get parent(): AVLNode<K, V> | undefined {
+    get parent(): AVLNode<K, V> | undefined {
         return this.#parent;
     }
 
-    public set parent(newParent: AVLNode<K, V> | undefined) {
+    set parent(newParent: AVLNode<K, V> | undefined) {
         this.#parent = newParent;
     }
 
-    public get leftNode(): AVLNode<K, V> | undefined {
+    get leftNode(): AVLNode<K, V> | undefined {
         return this.#leftNode;
     }
 
-    public set leftNode(newLeft: AVLNode<K, V> | undefined) { //ONLY to be used in the rotation methods
+    set leftNode(newLeft: AVLNode<K, V> | undefined) { //ONLY to be used in the rotation methods
         this.#leftNode = newLeft;
     }
 
-    public get rightNode(): AVLNode<K, V> | undefined {
+    get rightNode(): AVLNode<K, V> | undefined {
         return this.#rightNode;
     }
 
-    public set rightNode(newRight: AVLNode<K, V> | undefined) { //ONLY to be used in the rotation methods
+    set rightNode(newRight: AVLNode<K, V> | undefined) { //ONLY to be used in the rotation methods
         this.#rightNode = newRight; 
     }
 
-    public get min(): AVLNode<K, V> {
+    get min(): AVLNode<K, V> {
         return this.#leftNode?.min ?? this;
     }
 
-    public get max(): AVLNode<K, V> {
+    get max(): AVLNode<K, V> {
         return this.#rightNode?.max ?? this;
     }
 
-    public get(key: K): KVP<K, V[]> | undefined {
-        const compareValue: number = this.#compareFunc(key, this.#key);
-        if (compareValue === 0) {
-            return {
-                key: this.#key,
-                value: this.#values,
-            };
-        } else if (compareValue > 0) {
-            return this.#rightNode?.get(key);
-        } else {
-            return this.#leftNode?.get(key);
+    get(key: K): KVP<K, V[]> | undefined {
+        const compareResult: CompareResult = this.#compareFunc(key, this.#key);
+
+        switch (compareResult) {
+            case 'EQ': {
+                return this.kvp;
+            }
+            case 'GT': {
+                return this.#rightNode?.get(key);
+            }
+            case 'LT': {
+                return this.#leftNode?.get(key);
+            }
         }
     }
 
@@ -99,42 +108,45 @@ export default class AVLNode<K, V> {
         //to be implemented
     }*/
 
-    
-
-    public insert(key: K, ...items: V[]): [AVLNode<K, V>, number] /* new root node, after possible tree rotations, change in height of the tree */ {
+    insert(key: K, ...items: V[]): [AVLNode<K, V>, number] /* new root node, after possible tree rotations, change in height of the tree */ {
         if (items.length === 0) { return [this, 0]; }
 
-        const compareValue: number = this.#compareFunc(key, this.#key);
-
-        if (compareValue === 0) {
-            this.#values.push(...items);
-            return [this, 0];
-        }
+        const compareResult: CompareResult = this.#compareFunc(key, this.#key);
 
         let heightDelta = 0;
-        
-        if (compareValue > 0) {
-            let rightHeightDelta;
-            [this.#rightNode, rightHeightDelta] = 
-                this.#rightNode?.insert(key, ...items) ?? 
-                [ new AVLNode<K, V>(key, this.#compareFunc, this, items), this.#leftNode ? 0 : 1 ];
 
-            this.#balanceFactor += rightHeightDelta;
+        switch (compareResult) {
+            case 'EQ': {
+                this.#values.push(...items);
+                return [this, 0];
+            }
+            case 'GT': {
+                let rightHeightDelta;
+                [this.#rightNode, rightHeightDelta] = 
+                    this.#rightNode?.insert(key, ...items) ?? 
+                    [ new AVLNode<K, V>(key, this.#compareFunc, this, items), this.#leftNode ? 0 : 1 ];
 
-            if (this.#balanceFactor > 0) { heightDelta = rightHeightDelta; } // height of this tree doesn't change unless the updated subtree is now the highest. (if this tree is now that-side heavy)
-        } else {
-            let leftHeightDelta;
-            [this.#leftNode, leftHeightDelta] =
-                this.#leftNode?.insert(key, ...items) ?? 
-                [ new AVLNode<K, V>(key, this.#compareFunc, this, items), this.#rightNode ? 0 : 1 ];
+                this.#balanceFactor += rightHeightDelta;
 
-            this.#balanceFactor -= leftHeightDelta;
+                if (this.#balanceFactor > 0) { heightDelta = rightHeightDelta; } // height of this tree doesn't change unless the updated subtree is now the highest. (if this tree is now that-side heavy)
+                break;
+            }
+            case 'LT': {
+                let leftHeightDelta;
+                [this.#leftNode, leftHeightDelta] =
+                    this.#leftNode?.insert(key, ...items) ?? 
+                    [ new AVLNode<K, V>(key, this.#compareFunc, this, items), this.#rightNode ? 0 : 1 ];
 
-            if (this.#balanceFactor < 0) { heightDelta = leftHeightDelta; } // height of this tree doesn't change unless the updated subtree is now the highest. (if this tree is now that-side heavy)
+                this.#balanceFactor -= leftHeightDelta;
+
+                if (this.#balanceFactor < 0) { heightDelta = leftHeightDelta; } // height of this tree doesn't change unless the updated subtree is now the highest. (if this tree is now that-side heavy)
+                break;
+            }
+
+            
         }
-        
         const newNode: AVLNode<K, V> = AVLNode.rebalance(this);
-        return [newNode, heightDelta];
+            return [newNode, heightDelta];
     }
 
     /*public delete(key: K): AVLNode<K, V> | undefined {
