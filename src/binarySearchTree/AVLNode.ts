@@ -95,9 +95,11 @@ export default class AVLNode<K, V> {
             case 'EQ': {
                 return this.kvp;
             }
+
             case 'GT': {
                 return this.#rightNode?.get(key);
             }
+
             case 'LT': {
                 return this.#leftNode?.get(key);
             }
@@ -108,45 +110,46 @@ export default class AVLNode<K, V> {
         //to be implemented
     }*/
 
-    insert(key: K, ...items: V[]): [AVLNode<K, V>, number] /* new root node, after possible tree rotations, change in height of the tree */ {
-        if (items.length === 0) { return [this, 0]; }
+    insert(key: K, ...items: V[]): [AVLNode<K, V>, boolean] /* new root node, after possible tree rotations, and if the tree increased in height */ {
+        if (items.length === 0) { return [this, false ]; }
 
         const compareResult: CompareResult = this.#compareFunc(key, this.#key);
-
-        let heightDelta = 0;
 
         switch (compareResult) {
             case 'EQ': {
                 this.#values.push(...items);
-                return [this, 0];
+                return [this, false];
             }
+
             case 'GT': {
-                let rightHeightDelta;
-                [this.#rightNode, rightHeightDelta] = 
+                let rightIncreased: boolean;
+                [this.#rightNode, rightIncreased] = 
                     this.#rightNode?.insert(key, ...items) ?? 
-                    [ new AVLNode<K, V>(key, this.#compareFunc, this, items), this.#leftNode ? 0 : 1 ];
+                    [ new AVLNode<K, V>(key, this.#compareFunc, this, items), true ];
 
-                this.#balanceFactor += rightHeightDelta;
+                this.#balanceFactor += rightIncreased ? 1 : 0;
 
-                if (this.#balanceFactor > 0) { heightDelta = rightHeightDelta; } // height of this tree doesn't change unless the updated subtree is now the highest. (if this tree is now that-side heavy)
+                //if (this.#balanceFactor > 0) { heightDelta = rightHeightDelta; } // height of this tree doesn't change unless the updated subtree is now the highest. (if this tree is now that-side heavy)
                 break;
             }
+
             case 'LT': {
-                let leftHeightDelta;
-                [this.#leftNode, leftHeightDelta] =
+                let leftIncreased: boolean;
+                [this.#leftNode, leftIncreased] =
                     this.#leftNode?.insert(key, ...items) ?? 
-                    [ new AVLNode<K, V>(key, this.#compareFunc, this, items), this.#rightNode ? 0 : 1 ];
+                    [ new AVLNode<K, V>(key, this.#compareFunc, this, items), true ];
 
-                this.#balanceFactor -= leftHeightDelta;
+                this.#balanceFactor -= leftIncreased ? 1 : 0;
 
-                if (this.#balanceFactor < 0) { heightDelta = leftHeightDelta; } // height of this tree doesn't change unless the updated subtree is now the highest. (if this tree is now that-side heavy)
+                //if (this.#balanceFactor < 0) { heightDelta = leftHeightDelta; } // height of this tree doesn't change unless the updated subtree is now the highest. (if this tree is now that-side heavy)
                 break;
             }
 
             
         }
-        const newNode: AVLNode<K, V> = AVLNode.rebalance(this);
-            return [newNode, heightDelta];
+
+        const [newNode, rebalanceNeeded]: [AVLNode<K, V>, boolean] = AVLNode.rebalance(this);
+        return [newNode, !rebalanceNeeded];
     }
 
     /*public delete(key: K): AVLNode<K, V> | undefined {
@@ -196,44 +199,41 @@ export default class AVLNode<K, V> {
         return newTree; 
     }*/
 
-    static rebalance<K, V>(tree: AVLNode<K, V>): AVLNode<K, V> {
+    static rebalance<K, V>(tree: AVLNode<K, V>): [AVLNode<K, V>, boolean]  /* new (balanced) node, and if rebalancing was necessary */ {
         // determine what imbalance type the tree has, then fix it :)
         // --> based on what balance factor of current tree and largest child are.
         if (tree.balanceFactor >= 2) {
             console.warn(`my temporary balance factor is: ${tree.balanceFactor}`);
             if ((tree.rightNode as AVLNode<K, V>).balanceFactor >= 0) {
-                console.log(`performing a left rotation`);
-                return AVLNode.rotateLeft(tree);
+                //console.log(`performing a left rotation`);
+                return [AVLNode.rotateLeft(tree), true];
             } else {
-                console.log(`performing a rightleft rotation`);
-                return AVLNode.rotateRightLeft(tree);
+                //console.log(`performing a rightleft rotation`);
+                return [AVLNode.rotateRightLeft(tree), true];
             }
         }
         if (tree.balanceFactor <= -2) {
             console.warn(`my temporary balance factor is: ${tree.balanceFactor}`);
             if ((tree.leftNode as AVLNode<K, V>).balanceFactor <= 0) {
-                console.log(`performing a right rotation`);
-                return AVLNode.rotateRight(tree);
+                //console.log(`performing a right rotation`);
+                return [AVLNode.rotateRight(tree), true];
             } else {
-                console.log(`performing a leftright rotation`);
-                return AVLNode.rotateLeftRight(tree); 
+                //console.log(`performing a leftright rotation`);
+                return [AVLNode.rotateLeftRight(tree), true]; 
             }
         }
-        return tree;
+        return [tree, false];
     }
 
     static rotateRight<K, V>(tree: AVLNode<K, V>): AVLNode<K, V> {
         const newRoot: AVLNode<K, V> = tree.leftNode as AVLNode<K, V>;
         [newRoot.parent, tree.parent] = [tree.parent, newRoot]; // swaps parents
         [newRoot.rightNode, tree.leftNode] = [tree, newRoot.rightNode]; // swaps inner children of each node, almost
-
-        if (newRoot.balanceFactor === 0) {
-            newRoot.balanceFactor -= 1;
-            newRoot.rightNode.balanceFactor += 1;
-        } else {
-            newRoot.balanceFactor = 0;
-            newRoot.rightNode.balanceFactor = 0;
+        if (tree.leftNode) {
+            tree.leftNode.parent = tree;
         }
+
+        //update balance factors
 
         console.log(`new root balanceFactor: ${newRoot.balanceFactor} \n new oldRoot balanceFactor: ${newRoot.rightNode.balanceFactor}`);
         
@@ -245,14 +245,11 @@ export default class AVLNode<K, V> {
         const newRoot: AVLNode<K, V> = tree.rightNode as AVLNode<K, V>;
         [newRoot.parent, tree.parent] = [tree.parent, newRoot]; // swaps parents
         [newRoot.leftNode, tree.rightNode] = [tree, newRoot.leftNode]; // swaps inner children of each node, almost
-
-        if (newRoot.balanceFactor === 0) {
-            newRoot.balanceFactor -= 1;
-            newRoot.leftNode.balanceFactor += 1;
-        } else {
-            newRoot.balanceFactor = 0;
-            newRoot.leftNode.balanceFactor = 0;
+        if (tree.rightNode) {
+            tree.rightNode.parent = tree;
         }
+
+        // update balance factors
 
         console.log(`new root balanceFactor: ${newRoot.balanceFactor} \n new oldRoot balanceFactor: ${newRoot.leftNode.balanceFactor}`);
 
