@@ -56,7 +56,7 @@ export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
 
     insert(key: K, ...items: V[]): void {
         if (items.length > 0) {
-            this.#root = this.#root?.insert(key, ...items)[0] ?? new AVLNode<K, V>(key, this.#compareFunc, undefined, items);
+            this.#root = this.#root?.insert(key, ...items) ?? new AVLNode<K, V>(key, this.#compareFunc, undefined, items);
         }
     }
 

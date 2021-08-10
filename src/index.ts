@@ -21,7 +21,7 @@ function generateRandomKVPArray(length: number): KVP<number, number[]>[] {
     return arrayToReturn;
 }
 
-const randomArray = generateRandomKVPArray(1000);
+const randomArray = generateRandomKVPArray(100000);
 
 const time1 = new Date().getTime();
 const testTree: AVLTree<number, number> = new AVLTree<number, number>((a, b) => {
