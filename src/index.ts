@@ -1,6 +1,7 @@
 import AVLTree from './binarySearchTree/AVLTree';
 import Timeline from './main/Timeline';
 import { KVP } from './util/KeyValuePair';
+import fs = require('fs');
 
 export default Timeline;
 
@@ -21,7 +22,7 @@ function generateRandomKVPArray(length: number): KVP<number, number[]>[] {
     return arrayToReturn;
 }
 
-const randomArray = generateRandomKVPArray(1000);
+const randomArray = generateRandomKVPArray(20);
 
 const time1 = new Date().getTime();
 const testTree: AVLTree<number, number> = new AVLTree<number, number>((a, b) => {
@@ -43,4 +44,5 @@ const time3 = new Date().getTime();
 const arraything = [...testTree];
 const time4 = new Date().getTime();
 console.log(arraything, `time taken: ${time4 - time3}ms.`);
+fs.writeFileSync(__dirname + '/file.json', JSON.stringify(testTree.toJson()));
 

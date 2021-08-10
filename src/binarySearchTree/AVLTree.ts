@@ -83,6 +83,10 @@ export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
         return new AVLIterator(this.#root, direction ?? 'ascending');
     }
 
+    toJson(): any {
+        return this.#root?.toJSON() ?? {};
+    }
+
     [Symbol.iterator](): Iterator<KVP<K, V[]>> {
         return this.entries();
     }
