@@ -7,13 +7,12 @@ export default Timeline;
 function generateRandomKVPArray(length: number): KVP<number, number[]>[] {
     const arrayToReturn: KVP<number, number[]>[] = [];
 
-    for (let i = 0; i < length; i++) {
-        const randomKey: number = Math.round(Math.random() * 10000);
+    for (let i = 1; i <= length; i++) {
         const randomValue: number = Math.round(Math.random() * 10000);
         const randomValue2: number = Math.round(Math.random() * 10000);
 
         arrayToReturn.push({
-            key: randomKey,
+            key: i,
             value: [randomValue, randomValue2],
         });
     }
@@ -21,7 +20,7 @@ function generateRandomKVPArray(length: number): KVP<number, number[]>[] {
     return arrayToReturn;
 }
 
-const randomArray = generateRandomKVPArray(100000);
+const randomArray = generateRandomKVPArray(1000);
 
 const time1 = new Date().getTime();
 const testTree: AVLTree<number, number> = new AVLTree<number, number>((a, b) => {
@@ -35,12 +34,18 @@ const testTree: AVLTree<number, number> = new AVLTree<number, number>((a, b) => 
     console.log('number equality is being dummbbbbbbb');
     return 'GT';
 }, randomArray);
+/*randomArray.forEach((value: KVP<number, number[]>) => {
+    testTree.delete(value.key);
+}); */
 const time2 = new Date().getTime();
 
 console.log(testTree.verify(), `${time2 - time1}ms.`);
 
+testTree.delete(17);
+
 const time3 = new Date().getTime();
 const arraything = [...testTree];
 const time4 = new Date().getTime();
-console.log(arraything, `time taken: ${time4 - time3}ms.`);
+
+console.log(arraything);
 

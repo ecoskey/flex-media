@@ -27,8 +27,8 @@ export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
     }
 
     /*public search(key: K): KVP<K, V[]> | undefined {
-        //to be implemented
-    } */
+        
+    }*/
 
     getMin(): KVP<K, V[]> | undefined {
         const minNode =  this.#root?.min;
@@ -60,9 +60,10 @@ export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
         }
     }
 
-    /*public delete(key: K): void {
+    delete(key: K): void {
         this.#root = this.#root?.delete(key);
-    }*/
+        if (this.#root && !this.#root.verify()) {console.log('delete doesn\'t work lmao');}
+    }
 
     clear(): void {
         this.#root = undefined;

@@ -7,6 +7,7 @@ export default class AVLIterator<K, V> implements Iterator<KVP<K, V[]>> {
     readonly #root: AVLNode<K, V>;
     readonly #direction: IteratorDirection;
     #current: AVLNode<K, V>;
+    #returnedFirst: boolean;
     
     constructor (tree: AVLNode<K, V>, direction: IteratorDirection) {
         this.#root = tree;
@@ -21,6 +22,7 @@ export default class AVLIterator<K, V> implements Iterator<KVP<K, V[]>> {
                 break;
             }
         }
+        this.#returnedFirst = false;
     }
 
     get current(): KVP<K, V[]> {
@@ -32,75 +34,45 @@ export default class AVLIterator<K, V> implements Iterator<KVP<K, V[]>> {
     }
 
     next(): IteratorResult<KVP<K, V[]>> {
+        if (!this.#returnedFirst) {
+            this.#returnedFirst = true;
+            return {
+                value: this.#current.kvp,
+                done: false,
+            };
+        }
+
         switch (this.#direction) {
             case 'ascending': {
-                if (this.#current === this.#root.max) {
+                const successor: AVLNode<K, V> | undefined = this.#current.successor;
+                if (successor) {
+                    this.#current = successor;
+                    return {
+                        value: successor.kvp,
+                        done: false,
+                    };
+                } else {
                     return {
                         value: undefined,
                         done: true,
                     };
                 }
-
-                if (this.#current.rightNode) {
-                    const newCurrent: AVLNode<K, V> = this.#current.rightNode.min;
-                    this.#current = newCurrent;
-                    return {
-                        value: newCurrent.kvp,
-                        done: false,
-                    };
-                }
-
-                let searchNode: AVLNode<K, V> = this.#current;
-                while (searchNode.parent) {
-                    const parentRightNode = searchNode.parent.rightNode;
-                    if (parentRightNode && parentRightNode !== searchNode) { // if we are approaching the parent from the left, and it has a right node
-                        const newCurrent: AVLNode<K, V> = parentRightNode.min;
-                        this.#current = newCurrent;
-                        return {
-                            value: newCurrent.kvp,
-                            done: false,
-                        };
-                    }
-                    searchNode = searchNode.parent;
-                }
-                break;
             }
             case 'descending': {
-                if (this.#current === this.#root.min) {
+                const predecessor: AVLNode<K, V> | undefined = this.#current.predecessor;
+                if (predecessor) {
+                    this.#current = predecessor;
                     return {
-                        value: undefined,
-                        done: true 
-                    };
-                }
-
-                if (this.#current.leftNode) {
-                    const newCurrent: AVLNode<K, V> = this.#current.leftNode;
-                    this.#current = newCurrent;
-                    return {
-                        value: newCurrent.kvp,
+                        value: predecessor.kvp,
                         done: false,
                     };
+                } else {
+                    return {
+                        value: undefined,
+                        done: true,
+                    };
                 }
-
-                let searchNode: AVLNode<K, V> = this.#current;
-                while (searchNode.parent) {
-                    const parentLeftNode = searchNode.parent.leftNode;
-                    if (parentLeftNode && parentLeftNode !== searchNode) {
-                        const newCurrent: AVLNode<K, V> = parentLeftNode.max;
-                        this.#current = newCurrent;
-                        return {
-                            value: newCurrent.kvp,
-                            done: false,
-                        };
-                    }
-                    searchNode = searchNode.parent;
-                }
-                break;
             }
         }
-        return { // this should never happen, as all cases are covered in the switch statmeent
-            value: undefined,
-            done: true,
-        };
     }
 }
