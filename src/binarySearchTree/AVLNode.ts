@@ -124,9 +124,53 @@ export default class AVLNode<K, V> {
         }
     }
 
-    /*search(key: K, mode: `closest${'' |'-min' | '-max'}`): KVP<K, V[]> {
-        //to be implemented
-    }*/
+    search(key: K, mode: `closest${'-max' | '-min'}`): AVLNode<K, V> | undefined /* returns the closest thing in this subtree */{
+        const compareResult: CompareResult = this.#compareFunc(key, this.#key); // reversed from the other one because the focus is the current key, not the target key as much
+
+        switch (compareResult) {
+            case 'EQ': {
+                return this;
+            }
+
+            case 'GT': {
+                const rightSearchResult: AVLNode<K, V> | undefined = this.#rightNode?.search(key, mode);
+
+                switch (mode) {
+                    case 'closest-max': {
+                        return rightSearchResult;
+                    }
+                    case 'closest-min': {
+                        if (rightSearchResult) {
+                            const compareThisToSubtree: CompareResult = this.#compareFunc(this.key, rightSearchResult.key);
+                            return compareThisToSubtree === 'GT' ? this : rightSearchResult;
+                        } else {
+                            return this;
+                        }
+                    }
+                }
+                break; // * unreachable but TS really doesn't like it being removed
+            }
+
+            case 'LT': {
+                const leftSearchResult: AVLNode<K, V> | undefined = this.#leftNode?.search(key, mode);
+
+                switch (mode) {
+                    case 'closest-max': {
+                        if (leftSearchResult) {
+                            const compareThisToSubtree: CompareResult = this.#compareFunc(this.key, leftSearchResult.key);
+                            return compareThisToSubtree === 'LT' ? this : leftSearchResult;
+                        } else {
+                            return this;
+                        }
+                    }
+                    case 'closest-min': {
+                        return leftSearchResult;
+                    }
+                }
+                break;
+            }
+        }
+    }
 
     insert(key: K, ...items: V[]): AVLNode<K, V> /* new root node, after possible tree rotations */ {
         if (items.length === 0) { return this; }
@@ -156,17 +200,17 @@ export default class AVLNode<K, V> {
         return newNode;
     }
 
-    delete(key: K): AVLNode<K, V> | undefined {
+    delete(key: K): AVLNode<K, V> | undefined { // ! VERY WIP, DOESN'T WORK AAAAAAAA
         const compareResult: CompareResult = this.#compareFunc(key, this.#key);
 
-        let newTree: AVLNode<K, V> | undefined;
+        let newNode: AVLNode<K, V>;
 
         switch (compareResult) {
             case 'EQ': {
                 if (this.#rightNode) {
                     if (this.#leftNode) {
+                        //TODO: FIX THIS THINGYYYYYYs
                         //pain time - node has two children, have to do some painful things to proceed
-                        //TODO: make in order successor finding a call to the common forward iterator (IterableIterator?)
                         const successor = this.successor as AVLNode<K, V>;
 
                         this.#rightNode = this.#rightNode.delete(successor.key); //this works, because it will only have one right child at most, as the minimum of its subtree
@@ -174,15 +218,15 @@ export default class AVLNode<K, V> {
                         successor.parent = this.#parent;
                         [successor.rightNode, successor.leftNode] = [this.#rightNode, this.#leftNode]; //effectively replace current node with new node
                         
-                        newTree = successor;
+                        newNode = successor;
                     } else {
                         //single replace - right
-                        return this.#rightNode;
+                        newNode = this.#rightNode;
                     }
                 } else {
                     if (this.#leftNode) {
                         //single replace - left
-                        return this.#leftNode;
+                        newNode = this.#leftNode;
                     } else {
                         //delete target has no child, this tree goes bye bye
                         return undefined;
@@ -193,29 +237,27 @@ export default class AVLNode<K, V> {
 
             case 'GT': {
                 if (this.#rightNode) {
-                    newTree = this.#rightNode.delete(key);
+                    this.#rightNode = this.#rightNode.delete(key);
+                    newNode = this;
                 } else {
-                    newTree = this;
+                    return this;
                 }
                 break;
             }
 
             case 'LT': {
                 if (this.#leftNode) {
-                    newTree = this.#leftNode.delete(key);
+                    this.#leftNode = this.#leftNode.delete(key);
+                    newNode = this;
                 } else {
-                    newTree = this;
+                    return this;
                 }
                 break;
             }
         }
-        
 
-        if (newTree) {
-            AVLNode.rebalance(newTree);
-        }
-        
-        return newTree; 
+        newNode = AVLNode.rebalance(newNode);
+        return newNode;
     }
 
     static rebalance<K, V>(tree: AVLNode<K, V>): AVLNode<K, V>  /* new (balanced) node, and if rebalancing was necessary */ {

@@ -12,7 +12,7 @@ function generateRandomKVPArray(length: number): KVP<number, number[]>[] {
         const randomValue2: number = Math.round(Math.random() * 10000);
 
         arrayToReturn.push({
-            key: i,
+            key: i * 5,
             value: [randomValue, randomValue2],
         });
     }
@@ -20,7 +20,7 @@ function generateRandomKVPArray(length: number): KVP<number, number[]>[] {
     return arrayToReturn;
 }
 
-const randomArray = generateRandomKVPArray(1000);
+const randomArray = generateRandomKVPArray(10);
 
 const time1 = new Date().getTime();
 const testTree: AVLTree<number, number> = new AVLTree<number, number>((a, b) => {
@@ -41,7 +41,9 @@ const time2 = new Date().getTime();
 
 console.log(testTree.verify(), `${time2 - time1}ms.`);
 
-testTree.delete(17);
+console.log([...testTree]);
+
+console.log(testTree.search(Infinity, 'closest-min'));
 
 const time3 = new Date().getTime();
 const arraything = [...testTree];

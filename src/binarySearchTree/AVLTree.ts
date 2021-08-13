@@ -26,9 +26,9 @@ export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
         return this.#root?.get(key);
     }
 
-    /*public search(key: K): KVP<K, V[]> | undefined {
-        
-    }*/
+    search(key: K, mode: `closest${'-max' | '-min'}`): KVP<K, V[]> | undefined {
+        return this.#root?.search(key, mode)?.kvp;
+    }
 
     getMin(): KVP<K, V[]> | undefined {
         const minNode =  this.#root?.min;
