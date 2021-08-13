@@ -200,7 +200,7 @@ export default class AVLNode<K, V> {
         return newNode;
     }
 
-    delete(key: K): AVLNode<K, V> | undefined { // ! VERY WIP, DOESN'T WORK AAAAAAAA
+    delete(key: K): AVLNode<K, V> | undefined { // ! VERY WIP, DOESN'T WORK AAAAAAAA                       WHY IS THIS THE WAY IT IS
         const compareResult: CompareResult = this.#compareFunc(key, this.#key);
 
         let newNode: AVLNode<K, V>;
