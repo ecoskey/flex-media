@@ -50,6 +50,10 @@ export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
         return this.#root?.get(key);
     }
 
+    isPopulated(): this is Required<AVLTree<K, V>> {
+        return this.#root !== undefined;
+    }
+
     search(key: K, mode: `closest${'-max' | '-min'}`): KVP<K, V[]> | undefined {
         return this.#root?.search(key, mode)?.kvp;
     }
@@ -69,19 +73,16 @@ export default class AVLTree<K, V> /*implements Iterable<KVP<K, V[]>>*/{
         this.#root = undefined;
     }
 
-    entries(direction: IteratorDirection = 'ascending'): Iterator<KVP<K, V[]>> {
-        if (!this.#root) { // makes a default (empty) iterator if there is no root node
-            return {
-                next() {
-                    return {
-                        value: undefined,
-                        done: true,
-                    };
-                }
-            };
+    entries(direction: IteratorDirection = 'ascending', startKey?: K): AVLIterator<K, V> {
+        let startNode: AVLNode<K, V> | undefined;
+
+        if (startKey) {
+            startNode = this.#root?.search(startKey, (direction === 'ascending' ? 'closest-max' : 'closest-min'));
+        } else {
+            startNode = (direction === 'ascending' ? this.#root?.min : this.#root?.max);
         }
 
-        return new AVLIterator(this.#root, direction);
+        return new AVLIterator(direction, startNode);
     }
 
     [Symbol.iterator](): Iterator<KVP<K, V[]>> {
